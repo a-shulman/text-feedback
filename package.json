@@ -1,5 +1,5 @@
 {
-  "name": "@a.shulman/text-feedback",
+  "name": "@diplodoc/text-feedback-extention",
   "version": "1.0.0",
   "description": "Diplodoc extension: floating feedback form for selected text",
   "main": "build/index.js",

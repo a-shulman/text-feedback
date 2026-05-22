@@ -1,6 +1,6 @@
 {
   "name": "@a.shulman/text-feedback-extension",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Diplodoc extension: floating feedback form for selected text",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -10,7 +10,7 @@
       "default": "./build/index.js"
     }
   },
-  "homepage": "https://diplodoc.com/",
+  "homepage": "https://docs.ideco.ru/",
   "engines": {
     "node": ">=22"
   },

@@ -1,5 +1,7 @@
 # @diplodoc/text-feedback
 
+[![NPM version](https://img.shields.io/npm/v/@a.shulman/text-feedback.svg?style=flat)](https://www.npmjs.org/package/@a.shulman/text-feedback)
+
 Diplodoc CLI extension that adds a floating feedback button when users select text in the documentation. Clicking the button opens a form where the user can report a typo, incorrect information, or other issue with the selected fragment.
 
 ## Installation

@@ -1,6 +1,6 @@
 import type {FeedbackOptions} from '../utils';
 
-import {reachGoal} from '../utils';
+import {buildYmGoalCall} from '../utils';
 import {getFeedbackOptions} from '../config';
 
 import {showSelectionForm} from './custom-form';
@@ -10,9 +10,11 @@ let isButtonVisible = false;
 let buttonTimeout: number | null = null;
 let feedbackButton: HTMLDivElement | null = null;
 
-const buttonTemplate = `
+function buildButtonTemplate(ymCall: string): string {
+    return `
 <button type="button"
     title="Оставить отзыв о тексте"
+    ${ymCall ? `onclick="${ymCall}"` : ''}
     style="
         display:flex;
         align-items:center;
@@ -32,6 +34,7 @@ const buttonTemplate = `
     </svg>
 </button>
 `;
+}
 
 const buttonStyles: Record<string, string> = {
     position: 'fixed',
@@ -117,14 +120,15 @@ function positionElementNearSelection(element: HTMLElement, isForm = false): voi
 function createButton(): HTMLDivElement {
     if (feedbackButton) return feedbackButton;
 
+    const ymCall = buildYmGoalCall(getFeedbackOptions().metrika, 'button');
+
     const wrapper = document.createElement('div');
     wrapper.id = 'selection-feedback-button';
     Object.assign(wrapper.style, buttonStyles);
-    wrapper.innerHTML = buttonTemplate;
+    wrapper.innerHTML = buildButtonTemplate(ymCall);
 
     wrapper.addEventListener('click', (e) => {
         e.stopPropagation();
-        reachGoal(getFeedbackOptions(), 'button');
         hideButton();
         showSelectionForm(currentSelectedText);
     });

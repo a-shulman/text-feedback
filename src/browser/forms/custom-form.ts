@@ -1,6 +1,6 @@
 import {showPopup} from '../popup';
 import {canSubmit, markSubmitted} from '../state';
-import {reachGoal, sanitizeInput, sendData} from '../utils';
+import {buildYmGoalCall, sanitizeInput, sendData} from '../utils';
 import {getFeedbackOptions} from '../config';
 
 import {CustomFormSuggestionEnum} from './enums';
@@ -51,7 +51,9 @@ function createForm(): HTMLDivElement {
     form.id = 'selection-feedback-form';
     Object.assign(form.style, formStyles);
 
-    const {privacyPolicyUrl} = getFeedbackOptions();
+    const {privacyPolicyUrl, metrika} = getFeedbackOptions();
+    const cancelOnclick = buildYmGoalCall(metrika, 'cancel');
+    const submitOnclick = buildYmGoalCall(metrika, 'submit');
     const consentHtml = privacyPolicyUrl
         ? `<label style="display: flex; align-items: flex-start; gap: 8px; font-size: 10px; margin: 6px 0 10px 0; cursor: pointer;">
             <input type="checkbox" id="personal-data-consent" style="margin-top: 2px; flex-shrink: 0;">
@@ -101,8 +103,8 @@ function createForm(): HTMLDivElement {
                 style="width: 100%; height: 30px; margin: 8px 0 4px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
         ${consentHtml}
         <div style="display: flex; gap: 8px; justify-content: flex-end;">
-            <button id="selection-cancel" type="button" class="g-button g-button_view_normal g-button_size_m g-button_pin_round-round">Отмена</button>
-            <button id="selection-submit" type="button" class="g-button g-button_view_action g-button_size_m g-button_pin_round-round">Отправить</button>
+            <button id="selection-cancel" type="button" class="g-button g-button_view_normal g-button_size_m g-button_pin_round-round"${cancelOnclick ? ` onclick="${cancelOnclick}"` : ''}>Отмена</button>
+            <button id="selection-submit" type="button" class="g-button g-button_view_action g-button_size_m g-button_pin_round-round"${submitOnclick ? ` onclick="${submitOnclick}"` : ''}>Отправить</button>
         </div>
     `;
 
@@ -111,11 +113,9 @@ function createForm(): HTMLDivElement {
 
         if (target.id === 'selection-cancel' || target.closest('#selection-cancel')) {
             e.stopPropagation();
-            reachGoal(getFeedbackOptions(), 'cancel');
             hideForm();
         } else if (target.id === 'selection-submit' || target.closest('#selection-submit')) {
             e.stopPropagation();
-            reachGoal(getFeedbackOptions(), 'submit');
             handleSubmit().catch(() => {});
         }
     });

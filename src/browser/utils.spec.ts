@@ -1,6 +1,6 @@
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {describe, expect, it} from 'vitest';
 
-import {reachGoal, sanitizeInput} from './utils';
+import {buildYmGoalCall, sanitizeInput} from './utils';
 
 describe('sanitizeInput', () => {
     it('returns empty string for non-string input', () => {
@@ -53,57 +53,42 @@ describe('sanitizeInput', () => {
     });
 });
 
-describe('reachGoal', () => {
-    const mockYm = vi.fn();
-
-    beforeEach(() => {
-        vi.stubGlobal('window', {ym: mockYm});
-        mockYm.mockClear();
+describe('buildYmGoalCall', () => {
+    it('returns empty string when metrika is undefined', () => {
+        expect(buildYmGoalCall(undefined, 'submit')).toBe('');
     });
 
-    afterEach(() => {
-        vi.unstubAllGlobals();
+    it('returns empty string when counterId is 0', () => {
+        expect(buildYmGoalCall({counterId: 0}, 'submit')).toBe('');
     });
 
-    it('does not call ym when metrika is undefined', () => {
-        reachGoal({}, 'submit');
-        expect(mockYm).not.toHaveBeenCalled();
+    it('returns ym call with default button goal', () => {
+        expect(buildYmGoalCall({counterId: 12345}, 'button')).toBe(
+            "ym(12345,'reachGoal','selection-feedback-button')",
+        );
     });
 
-    it('does not call ym when counterId is 0', () => {
-        reachGoal({metrika: {counterId: 0}}, 'submit');
-        expect(mockYm).not.toHaveBeenCalled();
+    it('returns ym call with default submit goal', () => {
+        expect(buildYmGoalCall({counterId: 12345}, 'submit')).toBe(
+            "ym(12345,'reachGoal','selection-submit')",
+        );
     });
 
-    it('calls ym with the default button goal', () => {
-        reachGoal({metrika: {counterId: 12345}}, 'button');
-        expect(mockYm).toHaveBeenCalledOnce();
-        expect(mockYm).toHaveBeenCalledWith(12345, 'reachGoal', 'selection-feedback-button');
+    it('returns ym call with default cancel goal', () => {
+        expect(buildYmGoalCall({counterId: 12345}, 'cancel')).toBe(
+            "ym(12345,'reachGoal','selection-cancel')",
+        );
     });
 
-    it('calls ym with the default submit goal', () => {
-        reachGoal({metrika: {counterId: 12345}}, 'submit');
-        expect(mockYm).toHaveBeenCalledWith(12345, 'reachGoal', 'selection-submit');
-    });
-
-    it('calls ym with the default cancel goal', () => {
-        reachGoal({metrika: {counterId: 12345}}, 'cancel');
-        expect(mockYm).toHaveBeenCalledWith(12345, 'reachGoal', 'selection-cancel');
-    });
-
-    it('calls ym with a custom goal name when provided', () => {
-        reachGoal({metrika: {counterId: 12345, goals: {submit: 'my-submit'}}}, 'submit');
-        expect(mockYm).toHaveBeenCalledWith(12345, 'reachGoal', 'my-submit');
+    it('returns ym call with a custom goal name when provided', () => {
+        expect(buildYmGoalCall({counterId: 12345, goals: {submit: 'my-submit'}}, 'submit')).toBe(
+            "ym(12345,'reachGoal','my-submit')",
+        );
     });
 
     it('falls back to the default goal when only another key is customised', () => {
-        reachGoal({metrika: {counterId: 12345, goals: {cancel: 'my-cancel'}}}, 'submit');
-        expect(mockYm).toHaveBeenCalledWith(12345, 'reachGoal', 'selection-submit');
-    });
-
-    it('does not throw when window.ym is not defined', () => {
-        vi.stubGlobal('window', {});
-        expect(() => reachGoal({metrika: {counterId: 1}}, 'submit')).not.toThrow();
-        expect(mockYm).not.toHaveBeenCalled();
+        expect(buildYmGoalCall({counterId: 12345, goals: {cancel: 'my-cancel'}}, 'submit')).toBe(
+            "ym(12345,'reachGoal','selection-submit')",
+        );
     });
 });

@@ -1,9 +1,3 @@
-declare global {
-    interface Window {
-        ym?: (counterId: number, type: string, goal: string) => void;
-    }
-}
-
 export type FeedbackMetrika = {
     counterId: number;
     goals?: {
@@ -19,17 +13,24 @@ export type FeedbackOptions = {
     privacyPolicyUrl?: string;
 };
 
-const DEFAULT_GOALS = {
+export const DEFAULT_GOALS = {
     button: 'selection-feedback-button',
     submit: 'selection-submit',
     cancel: 'selection-cancel',
 } as const;
 
-export function reachGoal(options: FeedbackOptions, key: keyof typeof DEFAULT_GOALS): void {
-    const metrika = options.metrika;
-    if (!metrika?.counterId) return;
+/**
+ * Returns an inline onclick attribute value that calls ym() in the global scope.
+ * Using onclick instead of an addEventListener avoids the "class constructors must be
+ * invoked with 'new'" error that occurs when ym is called from inside a strict-mode IIFE.
+ */
+export function buildYmGoalCall(
+    metrika: FeedbackMetrika | undefined,
+    key: keyof typeof DEFAULT_GOALS,
+): string {
+    if (!metrika?.counterId) return '';
     const goal = metrika.goals?.[key] ?? DEFAULT_GOALS[key];
-    window.ym?.(metrika.counterId, 'reachGoal', goal);
+    return `ym(${metrika.counterId},'reachGoal','${goal}')`;
 }
 
 export async function sendData<T extends object>(endpoint: string, payload: T): Promise<Response> {

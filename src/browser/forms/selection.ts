@@ -10,6 +10,9 @@ let isButtonVisible = false;
 let buttonTimeout: number | null = null;
 let feedbackButton: HTMLDivElement | null = null;
 
+const SELECTED_TEXT_MAX_LENGTH = 5000;
+const SELECTED_TEXT_MIN_LENGTH = 5;
+
 function buildButtonTemplate(ymCall: string): string {
     return `
 <button type="button"
@@ -185,7 +188,7 @@ export function initSelection(_options: FeedbackOptions): void {
                 const sel = window.getSelection();
                 const text = sel?.toString().trim() ?? '';
 
-                if (!text || text.length < 5) {
+                if (!text || text.length < SELECTED_TEXT_MIN_LENGTH || text.length > SELECTED_TEXT_MAX_LENGTH) {
                     lastText = '';
                     hideButton();
                     return;

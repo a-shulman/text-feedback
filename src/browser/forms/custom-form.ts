@@ -10,7 +10,6 @@ let selectedText = '';
 
 const COMMENT_MAX_LENGTH = 255;
 const CONTACT_MAX_LENGTH = 255;
-const SELECTED_TEXT_MAX_LENGTH = 5000;
 
 const formStyles: Record<string, string> = {
     position: 'fixed',
@@ -293,7 +292,7 @@ async function handleSubmit(): Promise<void> {
             url: location.href,
             title: document.title,
             suggestion: issueValue,
-            selected_text: sanitizeInput(selectedText).slice(0, SELECTED_TEXT_MAX_LENGTH),
+            selected_text: sanitizeInput(selectedText),
             comment,
             contact,
         });

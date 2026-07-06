@@ -8,6 +8,10 @@ import {CustomFormSuggestionEnum} from './enums';
 let formEl: HTMLDivElement | null = null;
 let selectedText = '';
 
+const COMMENT_MAX_LENGTH = 255;
+const CONTACT_MAX_LENGTH = 255;
+const SELECTED_TEXT_MAX_LENGTH = 5000;
+
 const formStyles: Record<string, string> = {
     position: 'fixed',
     background: 'var(--g-color-base-background)',
@@ -101,6 +105,7 @@ function createForm(): HTMLDivElement {
         <div id="comment-error" style="color: var(--g-color-base-brand); font-size: 12px; margin-bottom: 10px; min-height: 16px; display: none;"></div>
         <textarea id="selection-contact" placeholder="Контакт (необязательно)"
                 style="width: 100%; height: 30px; margin: 8px 0 4px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+        <div id="contact-error" style="color: var(--g-color-base-brand); font-size: 12px; margin-bottom: 10px; min-height: 16px; display: none;"></div>
         ${consentHtml}
         <div style="display: flex; gap: 8px; justify-content: flex-end;">
             <button id="selection-cancel" type="button" class="g-button g-button_view_normal g-button_size_m g-button_pin_round-round"${cancelOnclick ? ` onclick="${cancelOnclick}"` : ''}>Отмена</button>
@@ -123,17 +128,39 @@ function createForm(): HTMLDivElement {
     form.addEventListener('input', (e) => {
         const target = e.target as HTMLTextAreaElement;
         if (target.id === 'selection-comment') {
-            target.style.borderColor = '#ddd';
-            target.placeholder = 'Комментарий...';
             const errorElement = form.querySelector<HTMLDivElement>('#comment-error');
-            if (errorElement) {
-                errorElement.textContent = '';
-                errorElement.style.display = 'none';
+            if (target.value.length > COMMENT_MAX_LENGTH) {
+                target.style.borderColor = 'var(--g-color-base-brand)';
+                if (errorElement) {
+                    errorElement.textContent = `Максимальное количество символов в комментарии - ${COMMENT_MAX_LENGTH}`;
+                    errorElement.style.display = 'block';
+                }
+            } else {
+                target.style.borderColor = '#ddd';
+                target.placeholder = 'Комментарий...';
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.style.display = 'none';
+                }
             }
         }
         if (target.id === 'selection-contact') {
-            updateSubmitButton(form);
+            const errorElement = form.querySelector<HTMLDivElement>('#contact-error');
+            if (target.value.length > CONTACT_MAX_LENGTH) {
+                target.style.borderColor = 'var(--g-color-base-brand)';
+                if (errorElement) {
+                    errorElement.textContent = `Максимальное количество символов в контакте - ${CONTACT_MAX_LENGTH}`;
+                    errorElement.style.display = 'block';
+                }
+            } else {
+                target.style.borderColor = '#ddd';
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.style.display = 'none';
+                }
+            }
         }
+        updateSubmitButton(form);
     });
 
     form.addEventListener('change', (e) => {
@@ -157,6 +184,7 @@ function createForm(): HTMLDivElement {
 }
 
 function updateSubmitButton(form: HTMLDivElement): void {
+    const commentEl = form.querySelector<HTMLTextAreaElement>('#selection-comment');
     const contactEl = form.querySelector<HTMLTextAreaElement>('#selection-contact');
     const consentEl = form.querySelector<HTMLInputElement>('#personal-data-consent');
     const submitBtn = form.querySelector<HTMLButtonElement>('#selection-submit');
@@ -164,13 +192,20 @@ function updateSubmitButton(form: HTMLDivElement): void {
 
     const hasContact = (contactEl?.value ?? '').trim().length > 0;
     const hasConsent = consentEl?.checked ?? false;
-    // Disable submit only when contact is filled but consent is not given
-    const disabled = hasContact && !hasConsent;
+    const exceedsLimit =
+        (commentEl?.value.length ?? 0) > COMMENT_MAX_LENGTH ||
+        (contactEl?.value.length ?? 0) > CONTACT_MAX_LENGTH;
+    // Disable submit when contact is filled but consent is not given, or a field exceeds its length limit
+    const disabled = (hasContact && !hasConsent) || exceedsLimit;
 
     submitBtn.disabled = disabled;
     submitBtn.style.opacity = disabled ? '0.5' : '';
     submitBtn.style.cursor = disabled ? 'not-allowed' : '';
-    submitBtn.title = disabled ? 'Дайте согласие на обработку персональных данных' : '';
+    submitBtn.title = exceedsLimit
+        ? 'Сократите текст до допустимой длины'
+        : disabled
+          ? 'Дайте согласие на обработку персональных данных'
+          : '';
 }
 
 async function handleSubmit(): Promise<void> {
@@ -230,12 +265,35 @@ async function handleSubmit(): Promise<void> {
         return;
     }
 
+    if (comment.length > COMMENT_MAX_LENGTH) {
+        if (errorEl) {
+            errorEl.textContent = `Максимальное количество символов в комментарии - ${COMMENT_MAX_LENGTH}`;
+            errorEl.style.display = 'block';
+        }
+        if (commentEl) {
+            commentEl.focus();
+        }
+        return;
+    }
+
+    if (contact.length > CONTACT_MAX_LENGTH) {
+        const contactErrorEl = formEl!.querySelector<HTMLDivElement>('#contact-error');
+        if (contactErrorEl) {
+            contactErrorEl.textContent = `Максимальное количество символов в контакте - ${CONTACT_MAX_LENGTH}`;
+            contactErrorEl.style.display = 'block';
+        }
+        if (contactEl) {
+            contactEl.focus();
+        }
+        return;
+    }
+
     try {
         await sendData(options.customFormEndpoint, {
             url: location.href,
             title: document.title,
             suggestion: issueValue,
-            selected_text: sanitizeInput(selectedText),
+            selected_text: sanitizeInput(selectedText).slice(0, SELECTED_TEXT_MAX_LENGTH),
             comment,
             contact,
         });
@@ -255,6 +313,7 @@ function resetForm(): void {
     const contactEl = formEl.querySelector<HTMLTextAreaElement>('#selection-contact');
     const consentEl = formEl.querySelector<HTMLInputElement>('#personal-data-consent');
     const errorEl = formEl.querySelector<HTMLDivElement>('#comment-error');
+    const contactErrorEl = formEl.querySelector<HTMLDivElement>('#contact-error');
 
     if (commentEl) {
         commentEl.value = '';
@@ -263,7 +322,10 @@ function resetForm(): void {
         commentEl.style.boxShadow = 'none';
     }
 
-    if (contactEl) contactEl.value = '';
+    if (contactEl) {
+        contactEl.value = '';
+        contactEl.style.borderColor = '#ddd';
+    }
 
     if (consentEl) {
         consentEl.checked = false;
@@ -273,6 +335,11 @@ function resetForm(): void {
     if (errorEl) {
         errorEl.textContent = '';
         errorEl.style.display = 'none';
+    }
+
+    if (contactErrorEl) {
+        contactErrorEl.textContent = '';
+        contactErrorEl.style.display = 'none';
     }
 
     formEl.querySelectorAll<HTMLInputElement>('input[name="issue"]').forEach((r) => {

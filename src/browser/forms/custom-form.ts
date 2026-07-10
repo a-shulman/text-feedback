@@ -102,7 +102,7 @@ function createForm(): HTMLDivElement {
         <textarea id="selection-comment" placeholder="Комментарий..."
                 style="width: 100%; height: 80px; margin: 8px 0 4px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
         <div id="comment-error" style="color: var(--g-color-base-brand); font-size: 12px; margin-bottom: 10px; min-height: 16px; display: none;"></div>
-        <textarea id="selection-contact" placeholder="Контакт (необязательно)"
+        <textarea id="selection-contact" placeholder="Контакт"
                 style="width: 100%; height: 30px; margin: 8px 0 4px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
         <div id="contact-error" style="color: var(--g-color-base-brand); font-size: 12px; margin-bottom: 10px; min-height: 16px; display: none;"></div>
         ${consentHtml}
@@ -234,13 +234,13 @@ async function handleSubmit(): Promise<void> {
     const contact = sanitizeInput(contactEl?.value ?? '');
     const issueValue = issue.value as CustomFormSuggestionEnum;
 
-    const requiresComment = [
+    const requiresExtraInfo = [
         CustomFormSuggestionEnum.ANOTHER,
         CustomFormSuggestionEnum.NON_RELEVANT,
         CustomFormSuggestionEnum.NO_EXAMPLE,
     ].includes(issueValue);
 
-    if (requiresComment && !comment) {
+    if (requiresExtraInfo && !comment) {
         if (errorEl) {
             errorEl.textContent = 'Пожалуйста, заполните это поле! *';
             errorEl.style.display = 'block';
@@ -249,6 +249,20 @@ async function handleSubmit(): Promise<void> {
             commentEl.style.borderColor = 'var(--g-color-base-brand)';
             commentEl.style.boxShadow = '0 0 0 1px var(--g-color-base-brand)';
             commentEl.focus();
+        }
+        return;
+    }
+
+    if (requiresExtraInfo && !contact) {
+        const contactErrorEl = formEl!.querySelector<HTMLDivElement>('#contact-error');
+        if (contactErrorEl) {
+            contactErrorEl.textContent = 'Пожалуйста, заполните это поле! *';
+            contactErrorEl.style.display = 'block';
+        }
+        if (contactEl) {
+            contactEl.style.borderColor = 'var(--g-color-base-brand)';
+            contactEl.style.boxShadow = '0 0 0 1px var(--g-color-base-brand)';
+            contactEl.focus();
         }
         return;
     }

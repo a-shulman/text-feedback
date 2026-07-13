@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(direnv exec *)",
+      "Read(./*)"
+    ],
+    "deny":  ["Bash(git push *)"],
+    "ask":   ["Bash(rm *)", "Edit(./*)"]
+  },
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    }
+  }
+}

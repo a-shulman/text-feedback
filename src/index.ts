@@ -42,6 +42,11 @@ export class Extension implements IExtension {
                 if (!resolved) return;
 
                 const endpointOrigin = getOrigin(resolved.endpoint);
+                if (!endpointOrigin) {
+                    run.logger.warn(
+                        `[TextFeedback] Unable to parse origin from endpoint URL "${resolved.endpoint}". CSP connect-src will not be extended.`,
+                    );
+                }
 
                 getEntryHooks(run.entry).Page.tap(NAME, (template) => {
                     if (endpointOrigin) {

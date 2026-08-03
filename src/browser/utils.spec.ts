@@ -64,31 +64,31 @@ describe('buildYmGoalCall', () => {
 
     it('returns ym call with default button goal', () => {
         expect(buildYmGoalCall({counterId: 12345}, 'button')).toBe(
-            "ym(12345,'reachGoal','selection-feedback-button')",
+            "typeof window.ym==='function'&&window.ym(12345,'reachGoal','selection-feedback-button')",
         );
     });
 
     it('returns ym call with default submit goal', () => {
         expect(buildYmGoalCall({counterId: 12345}, 'submit')).toBe(
-            "ym(12345,'reachGoal','selection-submit')",
+            "typeof window.ym==='function'&&window.ym(12345,'reachGoal','selection-submit')",
         );
     });
 
     it('returns ym call with default cancel goal', () => {
         expect(buildYmGoalCall({counterId: 12345}, 'cancel')).toBe(
-            "ym(12345,'reachGoal','selection-cancel')",
+            "typeof window.ym==='function'&&window.ym(12345,'reachGoal','selection-cancel')",
         );
     });
 
     it('returns ym call with a custom goal name when provided', () => {
         expect(buildYmGoalCall({counterId: 12345, goals: {submit: 'my-submit'}}, 'submit')).toBe(
-            "ym(12345,'reachGoal','my-submit')",
+            "typeof window.ym==='function'&&window.ym(12345,'reachGoal','my-submit')",
         );
     });
 
     it('falls back to the default goal when only another key is customised', () => {
         expect(buildYmGoalCall({counterId: 12345, goals: {cancel: 'my-cancel'}}, 'submit')).toBe(
-            "ym(12345,'reachGoal','selection-submit')",
+            "typeof window.ym==='function'&&window.ym(12345,'reachGoal','selection-submit')",
         );
     });
 });

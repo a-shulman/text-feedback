@@ -120,7 +120,9 @@ function createForm(): HTMLDivElement {
             hideForm();
         } else if (target.id === 'selection-submit' || target.closest('#selection-submit')) {
             e.stopPropagation();
-            handleSubmit().catch(() => {});
+            handleSubmit().catch((error) => {
+                console.error('[TextFeedback] Unexpected error while submitting feedback:', error);
+            });
         }
     });
 
@@ -314,7 +316,8 @@ async function handleSubmit(): Promise<void> {
         markSubmitted();
         hideForm();
         showPopup('Спасибо за отзыв!');
-    } catch {
+    } catch (error) {
+        console.error('[TextFeedback] Failed to submit feedback:', error);
         showPopup('Не удалось отправить отзыв', 'error');
     }
 }

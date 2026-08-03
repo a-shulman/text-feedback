@@ -23,6 +23,14 @@ export const DEFAULT_GOALS = {
  * Returns an inline onclick attribute value that calls ym() in the global scope.
  * Using onclick instead of an addEventListener avoids the "class constructors must be
  * invoked with 'new'" error that occurs when ym is called from inside a strict-mode IIFE.
+ *
+ * Accesses `window.ym` explicitly rather than the bare `ym` identifier: a bare identifier
+ * is resolved through the page's global lexical scope first, so if any other script on the
+ * page declares a top-level `class ym {}` (e.g. a minified vendor bundle), it silently
+ * shadows the real `window.ym` function and calling it throws "Class constructor ym cannot
+ * be invoked without 'new'". Property access on `window` bypasses that shadowing. The
+ * typeof guard also avoids a "window.ym is not a function" error when Metrika hasn't
+ * loaded yet or is blocked (e.g. by an ad blocker).
  */
 export function buildYmGoalCall(
     metrika: FeedbackMetrika | undefined,
@@ -30,7 +38,7 @@ export function buildYmGoalCall(
 ): string {
     if (!metrika?.counterId) return '';
     const goal = metrika.goals?.[key] ?? DEFAULT_GOALS[key];
-    return `ym(${metrika.counterId},'reachGoal','${goal}')`;
+    return `typeof window.ym==='function'&&window.ym(${metrika.counterId},'reachGoal','${goal}')`;
 }
 
 export async function sendData<T extends object>(endpoint: string, payload: T): Promise<Response> {
